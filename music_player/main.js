@@ -10,6 +10,7 @@ var audio=$('#audio');//thẻ audio
 var playBtn= $('.btn-toggle-play');
 var player=$('.player');
 var progress=$('#progress');
+const PLAYER_MUSIC='MUSIC_PLAYER';
 
 
 const app={
@@ -17,7 +18,8 @@ const app={
    checkPlay:false,
    progressDefault:0,
    musicPlayed:[],
-   
+   config:JSON.parse(localStorage.getItem(PLAYER_MUSIC))||{},
+
     songs:[
         {
             singer:'Thiên Tú',
@@ -82,7 +84,13 @@ const app={
             linkImg:'https://photo-resize-zmp3.zmdcdn.me/w240_r1x1_webp/avatars/5/3/7/4/53748e5ef2495f1896d1de64a787604a.jpg'
         }
     ],
-    
+    setConfig:function(key,value){
+        this.config[key]=value;
+        localStorage.setItem(PLAYER_MUSIC,JSON.stringify(this.config));
+    },
+
+
+    ///khi sử dụng attribute có tên là data , ta có thể thay thế sử dụng get attribute thành dataset.Index
     renderSongs:function(){
        var htmls= this.songs.map((song,index)=>{
            
@@ -121,12 +129,17 @@ const app={
        let prevSong=$('.btn-prev');
        let toggle_random=$('.btn-random');
        let loopSong=$('.btn-repeat');
-       let isRandom=false;
-       let isRepeat=false;
+       var isRandom=false;
+       var isRepeat=false;
        let lengthSong=(this.songs.length-1);
         //Xử lý sự kiện phóng to thu nhỏ đĩa ảnh khi scoll chuột
         ///Sự kiện phóng to ảnh, đậm dần khi lăn chuột xuống / thu nhỏ, ẩn đi khi lăn lên
-        var cdWidth=cd.offsetWidth;     
+        var cdWidth=cd.offsetWidth; 
+        loadConfig=function(){
+           isRandom=_this.config.isRandom;
+            isRepeat=_this.config.isRepeat;
+        }
+        
         document.onscroll=function(){
              
             var scrollTop=document.documentElement.scrollTop||window.scrollY
@@ -210,12 +223,15 @@ const app={
         // bật tắt random để phục vụ next bài random
         toggle_random.onclick=function(){         
             isRandom= !isRandom;
-            toggle_random.classList.toggle('active',isRandom) ;          
+            _this.setConfig('isRandom',isRandom);        
+           $(`.song-${_this.currentIndex}`).classList.add('active')
+            toggle_random.classList.toggle('active',isRandom);          
         }        
         // bật tắt loop 
         loopSong.onclick=function(){  
             isRepeat=!isRepeat;
-            loopSong.classList.toggle('active',isRepeat)        ;         
+            _this.setConfig('isRRepeat',isRepeat)
+            loopSong.classList.toggle('active',isRepeat);         
         }
         //Khi lựa chọn nút next           
         nextSong.onclick=function(){    
@@ -317,6 +333,7 @@ const app={
       audio.play();   
     },  
     start:function(){
+        
         // định nghĩa ra một function để khai báo các đối tượng
         this.defineProperties();              
         this.renderSongs();
@@ -325,3 +342,9 @@ const app={
     },
 }
 app.start();
+if(isRepeat){
+    loopSong.classList.add('active');         
+}else{
+    loopSong.classList.remove('active');         
+
+}
