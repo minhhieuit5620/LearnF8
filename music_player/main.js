@@ -18,6 +18,8 @@ const app={
    checkPlay:false,
    progressDefault:0,
    musicPlayed:[],
+   isRandom:false,
+   isRepeat:false,
    config:JSON.parse(localStorage.getItem(PLAYER_MUSIC))||{},
 
     songs:[
@@ -129,16 +131,12 @@ const app={
        let prevSong=$('.btn-prev');
        let toggle_random=$('.btn-random');
        let loopSong=$('.btn-repeat');
-       var isRandom=false;
-       var isRepeat=false;
+    
        let lengthSong=(this.songs.length-1);
         //Xử lý sự kiện phóng to thu nhỏ đĩa ảnh khi scoll chuột
         ///Sự kiện phóng to ảnh, đậm dần khi lăn chuột xuống / thu nhỏ, ẩn đi khi lăn lên
         var cdWidth=cd.offsetWidth; 
-        loadConfig=function(){
-           isRandom=_this.config.isRandom;
-            isRepeat=_this.config.isRepeat;
-        }
+        
         
         document.onscroll=function(){
              
@@ -206,37 +204,46 @@ const app={
             //lấy giá trị được chọn               
             let data=$(`.song-${index}`);       
            data.onclick=function(){
+                console.log(data.closest('.song:not(.active)'))
                 //nếu bài được chọn khác với bài đang phát 
-                if(_this.currentIndex!==index){              
-                    //xóa class active vào bài phát trước đó                              
-                    removeAtc();
-                    _this.currentIndex=index;//gán index tương ứng để lấy giá trị bài được chọn
-                    addAtc();//  active vào class vừa được chọn
-                    //gán thông tin bài được chọn để thực hiện phát nhạc và hiển thị        
-                    nameSong.innerText=song.name;
-                    imgSong.style.backgroundImage=`url(${song.linkImg})`;
-                    audio.src=song.linkMusic;  
-                    audio.play();                   
-                }                                          
-            }          
-        })
+                //f(_this.currentIndex!==index ){                   
+                    if(data.closest('.song:not(.active)') ){  
+                        //if(data.closest('.song:not(.active)'))   {
+                            //xóa class active vào bài phát trước đó                              
+                            removeAtc();
+                            _this.currentIndex=index;//gán index tương ứng để lấy giá trị bài được chọn
+                            addAtc();//  active vào class vừa được chọn
+                            //gán thông tin bài được chọn để thực hiện phát nhạc và hiển thị        
+                            nameSong.innerText=song.name;
+                            imgSong.style.backgroundImage=`url(${song.linkImg})`;
+                            audio.src=song.linkMusic;  
+                            audio.play();                                 
+                        // }
+                        // if(data.closest('.option')){
+                        //     console.log('ádasdad')
+                        // }              
+                }               
+                
+            }
+                  
+        })       
         // bật tắt random để phục vụ next bài random
         toggle_random.onclick=function(){         
-            isRandom= !isRandom;
-            _this.setConfig('isRandom',isRandom);        
+            _this.isRandom= !_this.isRandom;
+            _this.setConfig('isRandom',_this.isRandom);        
            $(`.song-${_this.currentIndex}`).classList.add('active')
-            toggle_random.classList.toggle('active',isRandom);          
+            toggle_random.classList.toggle('active',_this.isRandom);          
         }        
         // bật tắt loop 
         loopSong.onclick=function(){  
-            isRepeat=!isRepeat;
-            _this.setConfig('isRRepeat',isRepeat)
-            loopSong.classList.toggle('active',isRepeat);         
+            _this.isRepeat=!_this.isRepeat;
+            _this.setConfig('isRepeat',_this.isRepeat)
+            loopSong.classList.toggle('active',_this.isRepeat);         
         }
         //Khi lựa chọn nút next           
         nextSong.onclick=function(){    
             removeAtc();     
-            if(isRandom) {                                                      
+            if(_this.isRandom) {                                                      
                 _this.currentIndex= _this.randomSong();                                
                 //audio.play(); 
             }else{
@@ -255,7 +262,7 @@ const app={
         // khi thao tác với nút prev
         prevSong.onclick=function(){
             removeAtc();  
-            if(isRandom) {                                         
+            if(_this.isRandom) {                                         
                 _this.currentIndex=_this.randomSong();                                       
             }else{
                  //nếu nó nhỏ hơn tổng số lượng thì chuyển lên bài tiếp theo( index tăng lên 1)       
@@ -271,7 +278,7 @@ const app={
           
         }
         audio.onended=function(){
-            if(isRepeat){              
+            if(_this.isRepeat){              
                audio.play();
             }else{             
                 nextSong.click();
@@ -320,7 +327,16 @@ const app={
           
         
     },
+    loadConfig:function(){
+        this.isRandom=this.config.isRandom;
+        this.isRepeat=this.config.isRepeat;
+        if(this.isRandom){
+            $('.btn-random').classList.add('active');                     
+        }if(this.isRepeat){
+            $('.btn-repeat').classList.add('active');          
 
+        }
+     },
 
     /**
      * Load song playing
@@ -333,7 +349,7 @@ const app={
       audio.play();   
     },  
     start:function(){
-        
+        this.loadConfig();
         // định nghĩa ra một function để khai báo các đối tượng
         this.defineProperties();              
         this.renderSongs();
@@ -342,9 +358,3 @@ const app={
     },
 }
 app.start();
-if(isRepeat){
-    loopSong.classList.add('active');         
-}else{
-    loopSong.classList.remove('active');         
-
-}
